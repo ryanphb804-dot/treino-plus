@@ -1,0 +1,15 @@
+{
+  "appId": "com.treinomais.app",
+  "appName": "Treino+",
+  "webDir": "dist",
+  "android": {
+    "buildOptions": {
+      "releaseType": "APK"
+    }
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 0
+    }
+  }
+}
