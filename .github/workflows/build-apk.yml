@@ -1,0 +1,89 @@
+name: Build APK – Treino+
+
+on:
+  push:
+    branches: [main, master]
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Checkout do repositório
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # 2. Node.js
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: "npm"
+
+      # 3. Instala dependências
+      - name: Install dependencies
+        run: npm install
+
+      # 4. Build do React com Vite
+      - name: Build React app
+        run: npm run build
+
+      # 5. Java 17 (necessário para o Android build)
+      - name: Setup Java
+        uses: actions/setup-java@v4
+        with:
+          distribution: "temurin"
+          java-version: "17"
+
+      # 6. Instala o Capacitor CLI e inicializa o Android
+      - name: Capacitor – add Android & sync
+        run: |
+          npx cap add android
+          npx cap sync android
+
+      # 7. Copia o ícone para todas as resoluções Android
+      - name: Copy app icon
+        run: |
+          pip install Pillow
+          python3 << 'PYEOF'
+          from PIL import Image
+          import os
+
+          src = "public/icon.png"
+          img = Image.open(src).convert("RGBA")
+
+          sizes = {
+            "android/app/src/main/res/mipmap-mdpi":    48,
+            "android/app/src/main/res/mipmap-hdpi":    72,
+            "android/app/src/main/res/mipmap-xhdpi":   96,
+            "android/app/src/main/res/mipmap-xxhdpi":  144,
+            "android/app/src/main/res/mipmap-xxxhdpi": 192,
+          }
+
+          for path, size in sizes.items():
+            os.makedirs(path, exist_ok=True)
+            resized = img.resize((size, size), Image.LANCZOS)
+            resized.save(f"{path}/ic_launcher.png")
+            resized.save(f"{path}/ic_launcher_round.png")
+
+          print("Ícones gerados com sucesso!")
+          PYEOF
+
+      # 8. Permissão de execução para o Gradle
+      - name: Grant Gradle execute permission
+        run: chmod +x android/gradlew
+
+      # 9. Build do APK (debug – não precisa de keystore)
+      - name: Build APK
+        run: |
+          cd android
+          ./gradlew assembleDebug --no-daemon
+
+      # 10. Sobe o APK como artifact para download
+      - name: Upload APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: Treino-Plus-APK
+          path: android/app/build/outputs/apk/debug/app-debug.apk
+          retention-days: 30
