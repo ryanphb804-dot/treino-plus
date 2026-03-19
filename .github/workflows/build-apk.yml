@@ -65,6 +65,18 @@ jobs:
             resized = img.resize((size, size), Image.LANCZOS)
             resized.save(f"{path}/ic_launcher.png")
             resized.save(f"{path}/ic_launcher_round.png")
+            # Remove ícone vetorial que sobrescreve o PNG
+            xml = f"{path}/ic_launcher_foreground.xml"
+            if os.path.exists(xml):
+              os.remove(xml)
+
+          # Remove adaptive icon configs
+          for f in [
+            "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher.xml",
+            "android/app/src/main/res/mipmap-anydpi-v26/ic_launcher_round.xml"
+          ]:
+            if os.path.exists(f):
+              os.remove(f)
 
           print("Ícones gerados com sucesso!")
           PYEOF
