@@ -1,4 +1,4 @@
-# Treino+ 🏋️
+# Treino+ULTRA 🏋️
 
 App de check-in de treinos com acompanhamento de medidas corporais.
 
